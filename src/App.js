@@ -1,11 +1,11 @@
 import './App.css';
+import DiaryEditor from './DiaryEditor';
 
-function App() {
+const App = () => {
   return (
     <div className="App">
-      <h2>react-simple-diary</h2>
+      <DiaryEditor />
     </div>
   );
-}
-
+};
 export default App;
