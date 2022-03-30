@@ -1,5 +1,5 @@
 import './App.css';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import DiaryEditor from './DiaryEditor';
 import DiaryList from './DiaryList';
 // import OptimizeTest from './OptimizeTest';
@@ -69,7 +69,9 @@ const App = () => {
     getData();
   }, []);
 
-  const onCreate = (author, content, emotion) => {
+  // useCallback : 메모이제이션된 콜백 함수를 반환
+  // useCallback은 특정 함수를 새로 만들지 않고 재사용하고 싶을때 사용, 항상 최신 state를 참조할 수 있게 도와주는 함수형 업데이트
+  const onCreate = useCallback((author, content, emotion) => {
     const created_date = new Date().getTime();
     const newItem = {
       author,
@@ -79,8 +81,8 @@ const App = () => {
       id: dataId.current,
     };
     dataId.current += 1;
-    setData([newItem, ...data]);
-  };
+    setData((data) => [newItem, ...data]); // 함수형 업데이트를 통해 최신 state 값을 인자로 받아 참고할 수 있다.
+  }, []);
 
   const onRemove = (targetId) => {
     const newDiaryList = data.filter((it) => it.id !== targetId);
