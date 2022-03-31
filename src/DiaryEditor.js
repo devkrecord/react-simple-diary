@@ -1,10 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 
 const DiaryEditor = ({ onCreate }) => {
-  useEffect(() => {
-    console.log('DiaryEditor render');
-  });
-
   const authorInput = useRef();
   const contentInput = useRef();
   const [state, setState] = useState({
