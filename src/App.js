@@ -1,51 +1,42 @@
 import './App.css';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 import DiaryEditor from './DiaryEditor';
 import DiaryList from './DiaryList';
 // import OptimizeTest from './OptimizeTest';
 
-/*
-const dummyList = [
-  {
-    id: 1,
-    author: 'dev.kim',
-    content: 'hello~',
-    emotion: 5,
-    created_date: new Date().getTime(),
-  },
-  {
-    id: 2,
-    author: '홍길동',
-    content: 'hello~',
-    emotion: 5,
-    created_date: new Date().getTime(),
-  },
-  {
-    id: 3,
-    author: '둘리',
-    content: 'hello~',
-    emotion: 5,
-    created_date: new Date().getTime(),
-  },
-  {
-    id: 4,
-    author: '마이콜',
-    content: 'hello~',
-    emotion: 5,
-    created_date: new Date().getTime(),
-  },
-  {
-    id: 5,
-    author: '또치',
-    content: 'hello~',
-    emotion: 5,
-    created_date: new Date().getTime(),
-  },
-];
-*/
+const reducer = (state, action) => {
+  //reducer는  2개의 파라미터를 받음. 첫번쨰 상태변화가 일어나기 직전의 state, 두번째 어떤 상태 변화를 일으켜야 하는지 정보가 담겨있는 action 객체
+  // action 객체의 형태는 자유이다. type 값을 대문자와 _ 로 구성하는 관습이 있지만, 꼭 따라야 할 필요는 없다. ex) CREATE, CHANGE_INPUT
+  switch (action.type) {
+    case 'INIT': {
+      return action.data;
+    }
+    case 'CREATE':
+      const created_date = new Date().getTime();
+      const newItem = {
+        ...action.data,
+        created_date,
+      };
+      return [newItem, ...state];
+    case 'REMOVE':
+      return state.filter((it) => it.id !== action.targetId);
+    case 'EDIT':
+    default:
+      return state.map((it) =>
+        it.id === action.targetId ? { ...it, content: action.newContent } : it
+      );
+  }
+};
 
 const App = () => {
-  const [data, setData] = useState([]);
+  // const [data, setData] = useState([]);
+
+  // useState 대신 useReducer를 사용하는 이유
+  // : 복잡한 상태 업데이트 로직을 컴포넌트에서 분리시킬 수 있습니다. 상태 업데이트 로직을 컴포넌트 바깥에 작성 할 수도 있고, 심지어 다른 파일에 작성 후 불러와서 사용할 수 있다.
+
+  // dispatch는 상태변화를 발생시키는 함수, dispatch는 함수형 업데이트가 필요없다.
+  // dispatch 함수는 렌더링과 관계없이 함수가 동일하다는 것을 보장하기 때문에 -> useCallback을 사용하면서 dependency array를 걱정하지 않아도 됨.
+  const [data, dispatch] = useReducer(reducer, []); // reducer: 상태 변화를 처리하는 함수로 따로 구현해줘야한다, state 초기값
   const dataId = useRef(0);
 
   const getData = async () => {
@@ -62,7 +53,9 @@ const App = () => {
         id: dataId.current++,
       };
     });
-    setData(initData);
+
+    //setData(initData);
+    dispatch({ type: 'INIT', data: initData });
   };
 
   useEffect(() => {
@@ -72,28 +65,29 @@ const App = () => {
   // useCallback : 메모이제이션된 콜백 함수를 반환
   // useCallback은 특정 함수를 새로 만들지 않고 재사용하고 싶을때 사용, 항상 최신 state를 참조할 수 있게 도와주는 함수형 업데이트
   const onCreate = useCallback((author, content, emotion) => {
-    const created_date = new Date().getTime();
-    const newItem = {
-      author,
-      content,
-      emotion,
-      created_date,
-      id: dataId.current,
-    };
+    dispatch({
+      type: 'CREATE',
+      data: { author, content, emotion, id: dataId.current },
+    });
     dataId.current += 1;
-    setData((data) => [newItem, ...data]); // 함수형 업데이트를 통해 최신 state 값을 인자로 받아 참고할 수 있다.
+    // setData((data) => [newItem, ...data]); // 함수형 업데이트를 통해 최신 state 값을 인자로 받아 참고할 수 있다.
   }, []);
 
   const onRemove = useCallback((targetId) => {
-    setData((data) => data.filter((it) => it.id !== targetId));
+    dispatch({
+      type: 'REMOVE',
+      targetId,
+    });
+    // setData((data) => data.filter((it) => it.id !== targetId));
   }, []);
 
   const onEdit = useCallback((targetId, newContent) => {
-    setData((data) =>
-      data.map((it) =>
-        it.id === targetId ? { ...it, content: newContent } : it
-      )
-    );
+    dispatch({ type: 'EDIT', targetId, newContent });
+    // setData((data) =>
+    //   data.map((it) =>
+    //     it.id === targetId ? { ...it, content: newContent } : it
+    //   )
+    // );
   }, []);
 
   const getDiaryAnalysis = useMemo(() => {
