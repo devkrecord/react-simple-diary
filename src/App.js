@@ -1,5 +1,11 @@
 import './App.css';
-import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+} from 'react';
 import DiaryEditor from './DiaryEditor';
 import DiaryList from './DiaryList';
 // import OptimizeTest from './OptimizeTest';
@@ -27,6 +33,32 @@ const reducer = (state, action) => {
       );
   }
 };
+
+/*
+
+  👀 Props Drilling이란 ? 
+   : 리액트에서 데이터는 부모에서 자식 컴포넌트로 흐른다(단방향) props를 오로지 하위 컴포넌트에 전달하는 용도로만 쓰이는 것을 
+    프롭스가 마치 드릴처럼 땅을 파고 들어간다 해서 프롭스 드릴링이라 한다. ( 전달만 하는 props가 많아지면 유지보수가 힘들어짐 )
+
+  
+  Context: 문맥 ( ex. 일기데이터를 조작하고 관리하는 문맥하에 존재한다. ) , 공급자 컴포넌트 (<Provider />)에게 직통으로 데이터를 받는 자식 컴포넌트들의 영역 
+  
+  -----
+  Context 생성 
+  const MyContext = React.createContext(defaultValue);
+
+  Context Provider를 통한 데이터 공급 
+  <MyContext.Provider value={전역으로 전달하고자 하는 값}>
+  { 이 Context안에 위치할 자식 컴포넌트 들 }
+  </MyContext.Provider>
+  ------
+
+  */
+
+// export default 는 파일당 하나만 쓸 수 있음
+// export 는 여러개 쓸 수 있음
+export const DiaryStateContext = React.createContext();
+export const DiaryDispatchContext = React.createContext();
 
 const App = () => {
   // const [data, setData] = useState([]);
@@ -102,16 +134,24 @@ const App = () => {
   // const { goodCount, badCount, goodRatio } = getDiaryAnalysis();
   const { goodCount, badCount, goodRatio } = getDiaryAnalysis;
 
+  const memoizedDispatch = useMemo(() => {
+    return { onCreate, onRemove, onEdit };
+  }, []);
+
   return (
-    <div className="App">
-      {/* <OptimizeTest /> : React.memo를 이용한 성능 최적화 예시 컴포넌트*/}
-      <DiaryEditor onCreate={onCreate} />
-      <div>전체 일기 : {data.length}</div>
-      <div>기분 좋은 일기 개수: {goodCount}</div>
-      <div>기분 나쁜 일기 개수: {badCount}</div>
-      <div>기분 좋은 일기 비율: {goodRatio}</div>
-      <DiaryList onEdit={onEdit} onRemove={onRemove} diaryList={data} />
-    </div>
+    <DiaryStateContext.Provider value={data}>
+      <DiaryDispatchContext.Provider value={memoizedDispatch}>
+        <div className="App">
+          {/* <OptimizeTest /> : React.memo를 이용한 성능 최적화 예시 컴포넌트*/}
+          <DiaryEditor />
+          <div>전체 일기 : {data.length}</div>
+          <div>기분 좋은 일기 개수: {goodCount}</div>
+          <div>기분 나쁜 일기 개수: {badCount}</div>
+          <div>기분 좋은 일기 비율: {goodRatio}</div>
+          <DiaryList />
+        </div>
+      </DiaryDispatchContext.Provider>
+    </DiaryStateContext.Provider>
   );
 };
 export default App;
