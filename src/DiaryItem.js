@@ -27,10 +27,9 @@ const DiaryItem = ({ author, content, created_date, emotion, id }) => {
       return;
     }
 
-    if (window.confirm(`${id}번 째 일기를 수정하시겠습니까?`)) {
-      onEdit(id, localContent);
-      toggleIsEdit();
-    }
+    onEdit(id, localContent);
+    toggleIsEdit();
+    alert(`${id}번 째 일기를 수정하였습니다.`);
   };
 
   return (
